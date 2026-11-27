@@ -1,0 +1,66 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Cache definitions.
+ *
+ * @package    theme_atrium
+ * @copyright  2026 Suraj Thalange
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+$definitions = [
+    // Dashboard stat tile counts, keyed by user id. Five minutes, plus event-driven
+    // invalidation for completion changes (see db/events.php).
+    'stats' => [
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'ttl' => 300,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 1,
+    ],
+    // Active enrolment counts per course, for course cards. Ten minutes.
+    'coursecounts' => [
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'ttl' => 600,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 50,
+    ],
+    // The flat list of admin pages (name, title, URL) the command palette searches for
+    // site administrators, so the admin tree is built once an hour, not per keystroke.
+    'adminpages' => [
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'ttl' => 3600,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 1,
+    ],
+    // Site-wide counters for the front page. Ten minutes.
+    'sitecounts' => [
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'ttl' => 600,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 1,
+    ],
+];
