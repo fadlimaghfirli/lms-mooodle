@@ -1,0 +1,386 @@
+@theme @theme_atrium @javascript
+Feature: Atrium theme
+  In order to use the site comfortably
+  As a user
+  I need the sidebar, the colour scheme and the dashboard hero to work and to remember my choices
+
+  Background:
+    Given the following config values are set as admin:
+      | theme            | atrium |
+      | enablecompletion | 1      |
+    And the following "users" exist:
+      | username | firstname | lastname |
+      | student1 | Ada       | Lovelace |
+      | teacher1 | Grace     | Hopper   |
+    And the following "courses" exist:
+      | fullname | shortname | enablecompletion |
+      | Course 1 | C1        | 1                |
+    And the following "course enrolments" exist:
+      | user     | course | role           |
+      | student1 | C1     | student        |
+      | teacher1 | C1     | editingteacher |
+
+  Scenario: The sidebar carries the primary navigation, collapses to icons and remembers it
+    Given I log in as "student1"
+    Then "#atrium-sidebar" "css_element" should be visible
+    And I should see "Dashboard" in the "#atrium-sidebar" "css_element"
+    And "body.atrium-sidebar-collapsed" "css_element" should not exist
+    When I click on "Collapse sidebar" "button"
+    Then "body.atrium-sidebar-collapsed" "css_element" should exist
+    And I reload the page
+    And "body.atrium-sidebar-collapsed" "css_element" should exist
+    When I click on "Expand sidebar" "button"
+    Then "body.atrium-sidebar-collapsed" "css_element" should not exist
+    And I reload the page
+    And "body.atrium-sidebar-collapsed" "css_element" should not exist
+
+  Scenario: Dark mode switches at once from the navigation bar and survives a reload
+    Given I log in as "student1"
+    Then the "data-bs-theme" attribute of "html" "css_element" should contain "light"
+    When I click on "[data-action='atrium-scheme-toggle']" "css_element"
+    Then the "data-bs-theme" attribute of "html" "css_element" should contain "dark"
+    And I reload the page
+    And the "data-bs-theme" attribute of "html" "css_element" should contain "dark"
+    When I click on "#user-menu-toggle" "css_element"
+    And I click on "Switch to light mode" "link"
+    Then the "data-bs-theme" attribute of "html" "css_element" should contain "light"
+    And I reload the page
+    And the "data-bs-theme" attribute of "html" "css_element" should contain "light"
+
+  Scenario: Disabling dark mode removes every switch
+    Given the following config values are set as admin:
+      | enabledarkmode | 0 | theme_atrium |
+    And I log in as "student1"
+    Then "[data-action='atrium-scheme-toggle']" "css_element" should not exist
+    When I click on "#user-menu-toggle" "css_element"
+    Then I should not see "Switch to dark mode"
+
+  Scenario: The dashboard hero greets the learner with their counts and can be turned off
+    Given I log in as "student1"
+    Then I should see "Welcome back, Ada" in the ".atrium-hero" "css_element"
+    And I should see "1" in the ".atrium-stat-inprogress .atrium-stat-count" "css_element"
+    And I should see "0" in the ".atrium-stat-completed .atrium-stat-count" "css_element"
+    When I am on the "C1" "Course" page
+    Then ".atrium-hero" "css_element" should not exist
+    Given the following config values are set as admin:
+      | showhero | 0 | theme_atrium |
+    And I visit "/my/"
+    Then ".atrium-hero" "css_element" should not exist
+
+  Scenario: The course page keeps Boost's editing tools
+    Given I am on the "C1" "Course" page logged in as "teacher1"
+    And I turn editing mode on
+    Then "#theme_boost-drawers-courseindex" "css_element" should exist
+    And "#atrium-sidebar" "css_element" should be visible
+    When I open the activity chooser
+    Then I should see "Forum" in the ".modal" "css_element"
+
+  Scenario: The front page shows its designed sections to a visitor and hides them when switched off
+    Given the following "courses" exist:
+      | fullname       | shortname |
+      | Marine Biology | MB1       |
+    And the following config values are set as admin:
+      | forcelogin   | 0 |
+      | enablemyhome | 1 |
+    And I am on site homepage
+    Then I should see "Welcome to" in the ".atrium-fp-hero" "css_element"
+    And I should see "Browse courses" in the ".atrium-fp-hero" "css_element"
+    And I should see "Why learn here" in the ".atrium-fp-features" "css_element"
+    And I should see "Marine Biology" in the ".atrium-fp-showcase" "css_element"
+    And I should see "Courses" in the ".atrium-fp-stats" "css_element"
+    And I should see "Ready to start learning?" in the ".atrium-fp-cta" "css_element"
+    And "#atrium-sidebar" "css_element" should not exist
+    And ".atrium-fp-testimonials" "css_element" should not exist
+    When the following config values are set as admin:
+      | fp_features_enable | 0 | theme_atrium |
+      | fp_testimonials_enable | 1 | theme_atrium |
+      | fp_testimonial1_quote | Best site I have studied on. | theme_atrium |
+      | fp_testimonial1_name | Ada Lovelace | theme_atrium |
+    And I am on site homepage
+    Then ".atrium-fp-features" "css_element" should not exist
+    And I should see "Best site I have studied on." in the ".atrium-fp-testimonials" "css_element"
+    And I should see "Ada Lovelace" in the ".atrium-fp-testimonials" "css_element"
+    When the following config values are set as admin:
+      | fp_enable | 0 | theme_atrium |
+    And I am on site homepage
+    Then ".atrium-frontpage" "css_element" should not exist
+
+  Scenario: The catalogue lists courses as cards, searches, and remembers the list view
+    Given the following "categories" exist:
+      | name    | category | idnumber |
+      | Science | 0        | SCI      |
+      | Arts    | 0        | ART      |
+    And the following "courses" exist:
+      | fullname          | shortname | category |
+      | Marine Biology    | MB1       | SCI      |
+      | Organic Chemistry | OC1       | SCI      |
+      | Sculpture         | SC1       | ART      |
+    And I log in as "student1"
+    And I am on course index
+    Then I should see "Marine Biology" in the ".atrium-catalogue" "css_element"
+    And I should see "Sculpture" in the ".atrium-catalogue" "css_element"
+    And I should see "Science" in the ".atrium-catalogue-chips" "css_element"
+    And ".atrium-course-grid" "css_element" should exist
+    When I click on "Science" "link" in the ".atrium-catalogue-chips" "css_element"
+    Then I should see "Organic Chemistry" in the ".atrium-catalogue" "css_element"
+    And I should not see "Sculpture" in the ".atrium-catalogue" "css_element"
+    When I click on "List" "link" in the ".atrium-catalogue-view" "css_element"
+    Then ".atrium-course-list" "css_element" should exist
+    And I am on course index
+    And ".atrium-course-list" "css_element" should exist
+    When I set the field "Search courses" to "sculpt"
+    And I click on "Search" "button" in the ".atrium-catalogue-search" "css_element"
+    Then I should see "Sculpture" in the ".atrium-catalogue" "css_element"
+    And I should not see "Marine Biology" in the ".atrium-catalogue" "css_element"
+    When I set the field "Search courses" to "nothinghere"
+    And I click on "Search" "button" in the ".atrium-catalogue-search" "css_element"
+    Then ".atrium-empty" "css_element" should exist
+
+  Scenario: The enrolment page is a course landing page around the enrolment forms
+    Given the following "courses" exist:
+      | fullname     | shortname | summary                     |
+      | Astrophysics | AP1       | Stars, from birth to death. |
+    And the following "activities" exist:
+      | activity | course | name          | section |
+      | page     | AP1    | Reading list  | 1       |
+      | forum    | AP1    | Questions     | 1       |
+    And the following "course enrolments" exist:
+      | user     | course | role           |
+      | teacher1 | AP1    | editingteacher |
+    And I log in as "admin"
+    And I add "Self enrolment" enrolment method in "Astrophysics" with:
+      | Custom instance name | Join Astrophysics |
+    And I log out
+    When I log in as "student1"
+    And I am on "Astrophysics" course homepage
+    Then I should see "Astrophysics" in the ".atrium-enrol-banner" "css_element"
+    And I should see "Stars, from birth to death." in the ".atrium-enrol-summary" "css_element"
+    And I should see "Reading list" in the ".atrium-enrol-outline" "css_element"
+    And I should see "Grace Hopper" in the ".atrium-enrol-instructors" "css_element"
+    And I should see "Enrolment options" in the ".atrium-enrol-card" "css_element"
+    And "#theme_boost-drawers-courseindex" "css_element" should not exist
+    When I press "Enrol me"
+    Then I should see "Reading list"
+    And ".atrium-enrol" "css_element" should not exist
+
+  Scenario: The course banner shows progress and focus mode strips the page down and remembers it
+    Given the following "activities" exist:
+      | activity | course | name         | section | completion |
+      | page     | C1     | Reading list | 1       | 1          |
+    And I am on the "C1" "Course" page logged in as "student1"
+    Then I should see "Course 1" in the ".atrium-course-banner" "css_element"
+    And I should see "0% complete" in the ".atrium-course-banner" "css_element"
+    And "#atrium-sidebar" "css_element" should be visible
+    When I click on "Focus mode" "link" in the ".atrium-course-banner" "css_element"
+    Then "body.atrium-focus" "css_element" should exist
+    And "#atrium-sidebar" "css_element" should not be visible
+    And I should see "Exit focus mode" in the ".atrium-focus-bar" "css_element"
+    When I click on "Reading list" "link" in the ".course-content" "css_element"
+    Then "body.atrium-focus" "css_element" should exist
+    And I should see "Reading list"
+    When I click on "Exit focus mode" "link" in the ".atrium-focus-bar" "css_element"
+    Then "body.atrium-focus" "css_element" should not exist
+    And "#atrium-sidebar" "css_element" should be visible
+
+  Scenario: The announcement bar shows on every page, is dismissed once, and returns when the text changes
+    Given the following config values are set as admin:
+      | announcement_enable | 1                                   | theme_atrium |
+      | announcement_text   | <p>Maintenance on Sunday at 6pm.</p> | theme_atrium |
+      | announcement_type   | warning                             | theme_atrium |
+    And I log in as "student1"
+    Then I should see "Maintenance on Sunday at 6pm." in the "[data-region='atrium-announcement']" "css_element"
+    And ".atrium-announcement-warning" "css_element" should exist
+    When I am on the "C1" "Course" page
+    Then I should see "Maintenance on Sunday at 6pm." in the "[data-region='atrium-announcement']" "css_element"
+    When I click on "Dismiss this announcement" "button" in the "[data-region='atrium-announcement']" "css_element"
+    Then "[data-region='atrium-announcement']" "css_element" should not exist
+    And I reload the page
+    And "[data-region='atrium-announcement']" "css_element" should not exist
+    When the following config values are set as admin:
+      | announcement_text | <p>Maintenance moved to Monday.</p> | theme_atrium |
+    And I reload the page
+    Then I should see "Maintenance moved to Monday." in the "[data-region='atrium-announcement']" "css_element"
+
+  Scenario: Quick links open from the navigation bar and can be switched off
+    Given I log in as "admin"
+    And I visit "/admin/settings.php?section=themesettingatrium"
+    And I click on "Site" "link" in the "[role='tablist']" "css_element"
+    And I set the field "Links" to multiline:
+      """
+      fa-book|Library|/course/index.php
+      fa-headset|Help desk|https://help.example.com|newtab
+      """
+    And I press "Save changes"
+    And I log out
+    And I log in as "student1"
+    When I click on "Quick links" "button" in the ".atrium-quicklinks" "css_element"
+    Then I should see "Library" in the ".atrium-quicklinks-menu" "css_element"
+    And I should see "Help desk" in the ".atrium-quicklinks-menu" "css_element"
+    And "a.atrium-quicklink[target='_blank']" "css_element" should exist
+    When I click on "Library" "link" in the ".atrium-quicklinks-menu" "css_element"
+    Then I should see "Course 1" in the ".atrium-catalogue" "css_element"
+    When the following config values are set as admin:
+      | quicklinks | | theme_atrium |
+    And I reload the page
+    Then ".atrium-quicklinks" "css_element" should not exist
+
+  Scenario: The profile page groups core's sections into cards under a cover
+    Given I log in as "student1"
+    And I follow "Profile" in the user menu
+    Then ".page-context-header" "css_element" should exist
+    And I should see "Ada Lovelace" in the ".page-context-header" "css_element"
+    And I should see "User details" in the ".atrium-profile-card-contact" "css_element"
+    And I should see "Course 1" in the ".atrium-profile-card-coursedetails" "css_element"
+    And "[data-region='atrium-profile'] .atrium-profile-card" "css_element" should exist
+
+  Scenario: The login page offers three layouts with the panel copy and the text under the form
+    Given the following config values are set as admin:
+      | loginlayout       | panelleft                        | theme_atrium |
+      | loginpanelheading | Learn at your own pace           | theme_atrium |
+      | loginpaneltext    | <p>Courses, deadlines, done.</p> | theme_atrium |
+      | logintextbelow    | <p>Call the service desk.</p>    | theme_atrium |
+      | loginshowlangmenu | 0                                | theme_atrium |
+    And I visit "/login/index.php"
+    Then ".atrium-login-page-panelleft .atrium-login-panel" "css_element" should exist
+    And I should see "Learn at your own pace" in the ".atrium-login-panel" "css_element"
+    And I should see "Courses, deadlines, done." in the ".atrium-login-panel" "css_element"
+    And I should see "Call the service desk." in the ".atrium-login-card" "css_element"
+    And "body.atrium-login-nolangmenu" "css_element" should exist
+    When the following config values are set as admin:
+      | loginlayout | panelright | theme_atrium |
+    And I reload the page
+    Then ".atrium-login-page-panelright .atrium-login-panel" "css_element" should exist
+    When the following config values are set as admin:
+      | loginlayout | centred | theme_atrium |
+    And I reload the page
+    Then ".atrium-login-page-centred" "css_element" should exist
+    And ".atrium-login-panel" "css_element" should not exist
+    And I should see "Call the service desk." in the ".atrium-login-card" "css_element"
+    When I set the field "Username" to "student1"
+    And I set the field "Password" to "student1"
+    And I press "Log in"
+    Then I should see "Ada Lovelace"
+
+  Scenario: The footer shows typed columns, the contact details and the legal links
+    Given the following config values are set as admin:
+      | footercolumns        | 4                              | theme_atrium |
+      | footercol1type       | html                           | theme_atrium |
+      | footercol1title      | About us                       | theme_atrium |
+      | footercol1html       | <p>A place to learn.</p>       | theme_atrium |
+      | footercol2type       | menu                           | theme_atrium |
+      | footercol2title      | Explore                        | theme_atrium |
+      | footercol2menu       | All courses\|/course/index.php | theme_atrium |
+      | footercol3type       | contact                        | theme_atrium |
+      | footercol3title      | Contact                        | theme_atrium |
+      | footercontactemail   | hello@example.com              | theme_atrium |
+      | footercol4type       | social                         | theme_atrium |
+      | sociallinks          | github\|https://github.com     | theme_atrium |
+      | footerprivacyurl     | /admin/tool/policy/index.php   | theme_atrium |
+    And I log in as "student1"
+    Then I should see "A place to learn." in the ".atrium-footer-column-html" "css_element"
+    And I should see "hello@example.com" in the ".atrium-footer-column-contact" "css_element"
+    And "a[aria-label='github']" "css_element" should exist in the ".atrium-footer-column-social" "css_element"
+    And I should see "Privacy" in the ".atrium-footer-bottom" "css_element"
+    When I click on "All courses" "link" in the ".atrium-footer-column-menu" "css_element"
+    Then ".atrium-catalogue" "css_element" should exist
+
+  Scenario: The header can be compact, static, and show the site name alone
+    Given the following config values are set as admin:
+      | navbarsticky | 0    | theme_atrium |
+      | brandstyle   | name | theme_atrium |
+    And I log in as "student1"
+    Then "body.atrium-navbar-static" "css_element" should exist
+    And ".atrium-brand-name" "css_element" should exist
+    And ".atrium-brand-logo" "css_element" should not exist
+    When the following config values are set as admin:
+      | navbarsticky | 1 | theme_atrium |
+    And I reload the page
+    Then "body.atrium-navbar-static" "css_element" should not exist
+
+  Scenario: Extra slides turn the front page hero into a carousel
+    Given the following config values are set as admin:
+      | forcelogin             | 0                    |              |
+      | enablemyhome           | 1                    |              |
+      | fp_hero_slide2_heading | Enrolments are open  | theme_atrium |
+      | fp_hero_slide2_buttontext | See the courses   | theme_atrium |
+      | fp_hero_slide2_buttonurl  | /course/index.php | theme_atrium |
+      | fp_hero_autoplay       | 0                    | theme_atrium |
+    And I am on site homepage
+    Then ".atrium-fp-hero.carousel" "css_element" should exist
+    And I should see "Welcome to" in the ".atrium-fp-hero .carousel-item.active" "css_element"
+    And "Enrolments are open" "text" should not be visible
+    When I click on "Next" "button" in the ".atrium-fp-hero" "css_element"
+    Then I should see "Enrolments are open" in the ".atrium-fp-hero .carousel-item.active" "css_element"
+    And "Welcome to" "text" should not be visible
+    When I click on "See the courses" "link" in the ".atrium-fp-hero" "css_element"
+    Then ".atrium-catalogue" "css_element" should exist
+
+  Scenario: The recent courses menu lists what the user opened, and teaching staff see the course's numbers
+    Given the following "activities" exist:
+      | activity | course | name         | section | completion |
+      | page     | C1     | Reading list | 1       | 1          |
+    And I am on the "C1" "Course" page logged in as "teacher1"
+    Then I should see "Enrolled" in the ".atrium-course-banner-stats" "css_element"
+    And I should see "Activities" in the ".atrium-course-banner-stats" "css_element"
+    When I click on "Recent courses" "button" in the ".atrium-recentcourses" "css_element"
+    Then I should see "Course 1" in the ".atrium-recentcourses-menu" "css_element"
+    When I click on "Course 1" "link" in the ".atrium-recentcourses-menu" "css_element"
+    Then I should see "Course 1" in the ".atrium-course-banner" "css_element"
+    When I am on the "C1" "Course" page logged in as "student1"
+    Then ".atrium-course-banner-stats" "css_element" should not exist
+    When the following config values are set as admin:
+      | navbar_recentcourses | 0 | theme_atrium |
+    And I reload the page
+    Then ".atrium-recentcourses" "css_element" should not exist
+
+  Scenario: The search and go box opens from the navigation bar, finds things, and can be switched off
+    Given the following "activities" exist:
+      | activity | course | name          | section |
+      | page     | C1     | Plankton page | 1       |
+    And I am on the "C1" "Course" page logged in as "student1"
+    When I click on "Search and go" "button" in the ".atrium-navbar" "css_element"
+    Then I should see "Dashboard" in the "[data-region='atrium-palette-results']" "css_element"
+    And I should see "Plankton page" in the "[data-region='atrium-palette-results']" "css_element"
+    When I set the field "Type a course, activity, page or setting…" to "plank"
+    And I wait "2" seconds
+    Then I should see "Plankton page" in the "[data-region='atrium-palette-results']" "css_element"
+    And I should not see "Dashboard" in the "[data-region='atrium-palette-results']" "css_element"
+    When I click on "Plankton page" "link" in the "[data-region='atrium-palette-results']" "css_element"
+    Then I should see "Plankton page" in the "#page-header" "css_element"
+    When the following config values are set as admin:
+      | navbar_palette | 0 | theme_atrium |
+    And I reload the page
+    Then "[data-region='atrium-palette']" "css_element" should not exist
+
+  Scenario: The accessibility toolbar changes the text size, font and contrast, and remembers them
+    Given I log in as "student1"
+    When I click on "Accessibility" "button" in the ".atrium-navbar" "css_element"
+    And I click on "Large" "text" in the "[data-region='atrium-a11y-form']" "css_element"
+    And I click on "Reading font" "text" in the "[data-region='atrium-a11y-form']" "css_element"
+    And I click on "High contrast" "text" in the "[data-region='atrium-a11y-form']" "css_element"
+    And I wait "1" seconds
+    Then "body.atrium-text-large.atrium-font-reading.atrium-contrast" "css_element" should exist
+    When I reload the page
+    Then "body.atrium-text-large.atrium-font-reading.atrium-contrast" "css_element" should exist
+    When I click on "Accessibility" "button" in the ".atrium-navbar" "css_element"
+    And I click on "Reset" "button" in the "[data-region='atrium-a11y-form']" "css_element"
+    And I wait "1" seconds
+    And I reload the page
+    Then "body.atrium-contrast" "css_element" should not exist
+
+  Scenario: Quick start sets the site up in one click and reset puts it back
+    Given the following config values are set as admin:
+      | enablemyhome | 1 |
+    And I log in as "admin"
+    And I visit "/theme/atrium/quickstart.php"
+    And I click on "Set it up" "link"
+    Then I should see "The front page, footer, quick links and login page are set up"
+    When I am on site homepage
+    Then ".atrium-fp-hero.carousel" "css_element" should exist
+    And I should see "Why learn here" in the ".atrium-fp-features" "css_element"
+    And ".atrium-footer-column-menu" "css_element" should exist
+    When I visit "/theme/atrium/quickstart.php"
+    And I click on "Reset these settings" "link"
+    Then I should see "back to the theme's defaults"
+    When I am on site homepage
+    Then ".atrium-fp-hero.carousel" "css_element" should not exist

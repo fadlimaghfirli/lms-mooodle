@@ -1,0 +1,32 @@
+// Atrium: appended after Boost's whole stylesheet.
+//
+// Order matters only where a partial restates a rule from an earlier one; each
+// partial owns one area of the interface and reads its colours from the custom
+// properties in _tokens.scss, which is what makes the dark scheme a token swap rather
+// than a second stylesheet.
+
+@import "atrium/tokens";
+@import "atrium/base";
+@import "atrium/navbar";
+@import "atrium/sidebar";
+@import "atrium/drawers";
+@import "atrium/cards";
+@import "atrium/coursecard";
+@import "atrium/dashboard";
+@import "atrium/frontpage";
+@import "atrium/catalogue";
+@import "atrium/enrol";
+@import "atrium/coursebanner";
+@import "atrium/focus";
+@import "atrium/activities";
+@import "atrium/profile";
+@import "atrium/announcement";
+@import "atrium/longtail";
+@import "atrium/tools";
+@import "atrium/course";
+@import "atrium/forms";
+@import "atrium/footer";
+@import "atrium/login";
+@import "atrium/dark";
+// Last: print restates colours set by every partial above, including the dark scheme.
+@import "atrium/print";

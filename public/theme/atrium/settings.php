@@ -1,0 +1,1179 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Settings for the Atrium theme.
+ *
+ * Defaults are chosen so a fresh install with nothing changed already looks finished.
+ * Every setting that reaches the stylesheet resets the theme caches on save.
+ *
+ * @package    theme_atrium
+ * @copyright  2026 Suraj Thalange
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+use theme_atrium\local\accessibility_statement;
+use theme_atrium\local\frontpage_settings;
+use theme_atrium\local\presets;
+use theme_atrium\local\scheme;
+
+defined('MOODLE_INTERNAL') || die();
+
+if ($ADMIN->fulltree) {
+    $settings = new theme_boost_admin_settingspage_tabs('themesettingatrium', get_string('configtitle', 'theme_atrium'));
+
+    // Add a setting whose value reaches the compiled stylesheet.
+    $addcss = function (admin_settingpage $page, admin_setting $setting): void {
+        $setting->set_updatedcallback('theme_reset_all_caches');
+        $page->add($setting);
+    };
+
+    // General.
+    $page = new admin_settingpage('theme_atrium_general', get_string('generalsettings', 'theme_atrium'));
+
+    $page->add(new admin_setting_heading(
+        'theme_atrium/quickstart_link',
+        get_string('quickstart', 'theme_atrium'),
+        get_string('quickstart_link', 'theme_atrium', (new moodle_url('/theme/atrium/quickstart.php'))->out())
+    ));
+
+    $addcss($page, new admin_setting_configselect(
+        'theme_atrium/preset',
+        get_string('preset', 'theme_atrium'),
+        get_string('preset_desc', 'theme_atrium'),
+        presets::DEFAULT,
+        presets::choices()
+    ));
+
+    $addcss($page, new admin_setting_configcolourpicker(
+        'theme_atrium/brandcolor',
+        get_string('brandcolor', 'theme_atrium'),
+        get_string('brandcolor_desc', 'theme_atrium'),
+        ''
+    ));
+
+    $addcss($page, new admin_setting_configselect(
+        'theme_atrium/fontscale',
+        get_string('fontscale', 'theme_atrium'),
+        get_string('fontscale_desc', 'theme_atrium'),
+        '1',
+        ['0.9375' => get_string('fontscale:compact', 'theme_atrium'),
+         '1' => get_string('fontscale:default', 'theme_atrium'),
+         '1.0625' => get_string('fontscale:large', 'theme_atrium')]
+    ));
+
+    $addcss($page, new admin_setting_configselect(
+        'theme_atrium/radius',
+        get_string('radius', 'theme_atrium'),
+        get_string('radius_desc', 'theme_atrium'),
+        '12',
+        ['8' => '8px', '12' => '12px', '16' => '16px']
+    ));
+
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/enabledarkmode',
+        get_string('enabledarkmode', 'theme_atrium'),
+        get_string('enabledarkmode_desc', 'theme_atrium'),
+        1
+    ));
+
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/defaultscheme',
+        get_string('defaultscheme', 'theme_atrium'),
+        get_string('defaultscheme_desc', 'theme_atrium'),
+        scheme::LIGHT,
+        [scheme::LIGHT => get_string('scheme:light', 'theme_atrium'),
+         scheme::DARK => get_string('scheme:dark', 'theme_atrium'),
+         scheme::SYSTEM => get_string('scheme:system', 'theme_atrium')]
+    ));
+
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/showschemetoggle',
+        get_string('showschemetoggle', 'theme_atrium'),
+        get_string('showschemetoggle_desc', 'theme_atrium'),
+        1
+    ));
+
+
+    // Typography.
+    $addcss($page, new admin_setting_configselect(
+        'theme_atrium/fontfamily',
+        get_string('fontfamily', 'theme_atrium'),
+        get_string('fontfamily_desc', 'theme_atrium'),
+        'inter',
+        ['inter' => get_string('fontfamily:inter', 'theme_atrium'), 'system' => get_string('fontfamily:system', 'theme_atrium')]
+    ));
+
+    $addcss($page, new admin_setting_configselect(
+        'theme_atrium/headingweight',
+        get_string('headingweight', 'theme_atrium'),
+        get_string('headingweight_desc', 'theme_atrium'),
+        '600',
+        ['600' => get_string('headingweight:600', 'theme_atrium'), '700' => get_string('headingweight:700', 'theme_atrium')]
+    ));
+
+    $settings->add($page);
+
+    // Header.
+    $page = new admin_settingpage('theme_atrium_header', get_string('headersettings', 'theme_atrium'));
+
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/brandstyle',
+        get_string('brandstyle', 'theme_atrium'),
+        get_string('brandstyle_desc', 'theme_atrium'),
+        'both',
+        [
+            'both' => get_string('brandstyle:both', 'theme_atrium'),
+            'logo' => get_string('brandstyle:logo', 'theme_atrium'),
+            'name' => get_string('brandstyle:name', 'theme_atrium'),
+        ]
+    ));
+
+    $addcss($page, new admin_setting_configselect(
+        'theme_atrium/navbarheight',
+        get_string('navbarheight', 'theme_atrium'),
+        get_string('navbarheight_desc', 'theme_atrium'),
+        'standard',
+        [
+            'standard' => get_string('navbarheight:standard', 'theme_atrium'),
+            'compact' => get_string('navbarheight:compact', 'theme_atrium'),
+        ]
+    ));
+
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/navbarsticky',
+        get_string('navbarsticky', 'theme_atrium'),
+        get_string('navbarsticky_desc', 'theme_atrium'),
+        1
+    ));
+
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/navbar_palette',
+        get_string('navbar_palette', 'theme_atrium'),
+        get_string('navbar_palette_desc', 'theme_atrium'),
+        1
+    ));
+
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/navbar_a11y',
+        get_string('navbar_a11y', 'theme_atrium'),
+        get_string('navbar_a11y_desc', 'theme_atrium'),
+        1
+    ));
+
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/navbar_recentcourses',
+        get_string('navbar_recentcourses', 'theme_atrium'),
+        get_string('navbar_recentcourses_desc', 'theme_atrium'),
+        1
+    ));
+
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/pagewidth',
+        get_string('pagewidth', 'theme_atrium'),
+        get_string('pagewidth_desc', 'theme_atrium'),
+        'standard',
+        [
+            'standard' => get_string('pagewidth:standard', 'theme_atrium'),
+            'narrow' => get_string('pagewidth:narrow', 'theme_atrium'),
+            'wide' => get_string('pagewidth:wide', 'theme_atrium'),
+        ]
+    ));
+
+    $settings->add($page);
+
+    // Sidebar.
+    $page = new admin_settingpage('theme_atrium_sidebar', get_string('sidebarsettings', 'theme_atrium'));
+
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/sidebardefault',
+        get_string('sidebardefault', 'theme_atrium'),
+        get_string('sidebardefault_desc', 'theme_atrium'),
+        'expanded',
+        ['expanded' => get_string('sidebar:expanded', 'theme_atrium'),
+         'collapsed' => get_string('sidebar:collapsed', 'theme_atrium')]
+    ));
+
+    $addcss($page, new admin_setting_configselect(
+        'theme_atrium/sidebartone',
+        get_string('sidebartone', 'theme_atrium'),
+        get_string('sidebartone_desc', 'theme_atrium'),
+        'preset',
+        ['preset' => get_string('sidebartone:preset', 'theme_atrium'),
+         presets::TONE_LIGHT => get_string('scheme:light', 'theme_atrium'),
+         presets::TONE_DARK => get_string('scheme:dark', 'theme_atrium')]
+    ));
+
+    $settings->add($page);
+
+    // Login page.
+    $page = new admin_settingpage('theme_atrium_login', get_string('loginsettings', 'theme_atrium'));
+
+    $addcss($page, new admin_setting_configstoredfile(
+        'theme_atrium/loginbackgroundimage',
+        get_string('loginbackgroundimage', 'theme_atrium'),
+        get_string('loginbackgroundimage_desc', 'theme_atrium'),
+        'loginbackgroundimage',
+        0,
+        ['maxfiles' => 1, 'accepted_types' => ['web_image']]
+    ));
+
+    $addcss($page, new admin_setting_configcolourpicker(
+        'theme_atrium/loginoverlaycolor',
+        get_string('loginoverlaycolor', 'theme_atrium'),
+        get_string('loginoverlaycolor_desc', 'theme_atrium'),
+        '#0f6e73'
+    ));
+
+    $addcss($page, new admin_setting_configselect(
+        'theme_atrium/loginoverlayopacity',
+        get_string('loginoverlayopacity', 'theme_atrium'),
+        get_string('loginoverlayopacity_desc', 'theme_atrium'),
+        '0.35',
+        ['0.25' => '25%', '0.35' => '35%', '0.45' => '45%', '0.55' => '55%', '0.65' => '65%', '0.75' => '75%', '0.85' => '85%']
+    ));
+
+
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/loginlayout',
+        get_string('loginlayout', 'theme_atrium'),
+        get_string('loginlayout_desc', 'theme_atrium'),
+        'centred',
+        [
+            'centred' => get_string('loginlayout:centred', 'theme_atrium'),
+            'panelleft' => get_string('loginlayout:panelleft', 'theme_atrium'),
+            'panelright' => get_string('loginlayout:panelright', 'theme_atrium'),
+        ]
+    ));
+
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/loginpanelheading',
+        get_string('loginpanelheading', 'theme_atrium'),
+        get_string('loginpanelheading_desc', 'theme_atrium'),
+        '',
+        PARAM_TEXT
+    ));
+
+    $page->add(new admin_setting_confightmleditor(
+        'theme_atrium/loginpaneltext',
+        get_string('loginpaneltext', 'theme_atrium'),
+        '',
+        ''
+    ));
+
+    $page->add(new admin_setting_confightmleditor(
+        'theme_atrium/logintextabove',
+        get_string('logintextabove', 'theme_atrium'),
+        get_string('logintextabove_desc', 'theme_atrium'),
+        ''
+    ));
+
+    $page->add(new admin_setting_confightmleditor(
+        'theme_atrium/logintextbelow',
+        get_string('logintextbelow', 'theme_atrium'),
+        get_string('logintextbelow_desc', 'theme_atrium'),
+        ''
+    ));
+
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/loginshowlangmenu',
+        get_string('loginshowlangmenu', 'theme_atrium'),
+        get_string('loginshowlangmenu_desc', 'theme_atrium'),
+        1
+    ));
+
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/loginsignupbutton',
+        get_string('loginsignupbutton', 'theme_atrium'),
+        get_string('loginsignupbutton_desc', 'theme_atrium'),
+        0
+    ));
+
+    $settings->add($page);
+
+    // Course.
+    $page = new admin_settingpage('theme_atrium_course', get_string('coursesettings', 'theme_atrium'));
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/course_showbanner',
+        get_string('course_showbanner', 'theme_atrium'),
+        get_string('course_showbanner_desc', 'theme_atrium'),
+        1
+    ));
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/course_enablefocus',
+        get_string('course_enablefocus', 'theme_atrium'),
+        get_string('course_enablefocus_desc', 'theme_atrium'),
+        1
+    ));
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/course_showstats',
+        get_string('course_showstats', 'theme_atrium'),
+        get_string('course_showstats_desc', 'theme_atrium'),
+        1
+    ));
+    $settings->add($page);
+
+    // Dashboard.
+    $page = new admin_settingpage('theme_atrium_dashboard', get_string('dashboardsettings', 'theme_atrium'));
+
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/showhero',
+        get_string('showhero', 'theme_atrium'),
+        get_string('showhero_desc', 'theme_atrium'),
+        1
+    ));
+
+    $addcss($page, new admin_setting_configstoredfile(
+        'theme_atrium/heroimage',
+        get_string('heroimage', 'theme_atrium'),
+        get_string('heroimage_desc', 'theme_atrium'),
+        'heroimage',
+        0,
+        ['maxfiles' => 1, 'accepted_types' => ['web_image']]
+    ));
+
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/herogreeting',
+        get_string('herogreeting', 'theme_atrium'),
+        get_string('herogreeting_desc', 'theme_atrium'),
+        get_string('herogreeting_default', 'theme_atrium'),
+        PARAM_TEXT
+    ));
+
+    foreach (['inprogress', 'completed', 'due', 'unread'] as $tile) {
+        $page->add(new admin_setting_configcheckbox(
+            'theme_atrium/showstat_' . $tile,
+            get_string('showstat_' . $tile, 'theme_atrium'),
+            get_string('showstat_desc', 'theme_atrium'),
+            1
+        ));
+    }
+
+    $settings->add($page);
+
+    // Front page.
+    $page = new admin_settingpage('theme_atrium_frontpage', get_string('frontpagesettings', 'theme_atrium'));
+    $sectionenable = get_string('fp_section_enable', 'theme_atrium');
+    $sectionheading = get_string('fp_section_heading', 'theme_atrium');
+
+    $page->add(new admin_setting_heading(
+        'theme_atrium/fp_intro',
+        '',
+        get_string('fp_intro', 'theme_atrium')
+    ));
+
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/fp_enable',
+        get_string('fp_enable', 'theme_atrium'),
+        get_string('fp_enable_desc', 'theme_atrium'),
+        1
+    ));
+
+    // Hero.
+    $page->add(new admin_setting_heading('theme_atrium/fp_hero', get_string('fp_hero', 'theme_atrium'), ''));
+    $page->add(new admin_setting_configcheckbox('theme_atrium/fp_hero_enable', $sectionenable, '', 1));
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/fp_hero_heading',
+        get_string('fp_hero_heading', 'theme_atrium'),
+        get_string('fp_placeholders_desc', 'theme_atrium'),
+        get_string('fp_hero_heading_default', 'theme_atrium'),
+        PARAM_TEXT
+    ));
+    $page->add(new admin_setting_configtextarea(
+        'theme_atrium/fp_hero_subheading',
+        get_string('fp_hero_subheading', 'theme_atrium'),
+        '',
+        get_string('fp_hero_subheading_default', 'theme_atrium'),
+        PARAM_TEXT
+    ));
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/fp_hero_button1text',
+        get_string('fp_button1text', 'theme_atrium'),
+        get_string('fp_buttontext_desc', 'theme_atrium'),
+        get_string('fp_hero_button1text_default', 'theme_atrium'),
+        PARAM_TEXT
+    ));
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/fp_hero_button1url',
+        get_string('fp_button1url', 'theme_atrium'),
+        get_string('fp_buttonurl_desc', 'theme_atrium'),
+        '/course/index.php',
+        PARAM_URL
+    ));
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/fp_hero_button2text',
+        get_string('fp_button2text', 'theme_atrium'),
+        get_string('fp_buttontext_desc', 'theme_atrium'),
+        '',
+        PARAM_TEXT
+    ));
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/fp_hero_button2url',
+        get_string('fp_button2url', 'theme_atrium'),
+        get_string('fp_buttonurl_desc', 'theme_atrium'),
+        '',
+        PARAM_URL
+    ));
+    $addcss($page, new admin_setting_configstoredfile(
+        'theme_atrium/fp_heroimage',
+        get_string('fp_hero_image', 'theme_atrium'),
+        get_string('fp_hero_image_desc', 'theme_atrium'),
+        'fp_heroimage',
+        0,
+        ['maxfiles' => 1, 'accepted_types' => ['web_image']]
+    ));
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/fp_hero_align',
+        get_string('fp_hero_align', 'theme_atrium'),
+        '',
+        'left',
+        ['left' => get_string('fp_align_left', 'theme_atrium'), 'center' => get_string('fp_align_center', 'theme_atrium')]
+    ));
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/fp_hero_height',
+        get_string('fp_hero_height', 'theme_atrium'),
+        '',
+        'standard',
+        ['compact' => get_string('fp_height_compact', 'theme_atrium'), 'standard' => get_string(
+            'fp_height_standard',
+            'theme_atrium'
+        ),
+        'tall' => get_string(
+            'fp_height_tall',
+            'theme_atrium'
+        )]
+    ));
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/fp_hero_overlay',
+        get_string('fp_hero_overlay', 'theme_atrium'),
+        get_string('fp_hero_overlay_desc', 'theme_atrium'),
+        '0.5',
+        ['0.2' => '20%', '0.35' => '35%', '0.5' => '50%', '0.65' => '65%', '0.8' => '80%']
+    ));
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/fp_hero_transparentnavbar',
+        get_string('fp_hero_transparentnavbar', 'theme_atrium'),
+        get_string('fp_hero_transparentnavbar_desc', 'theme_atrium'),
+        0
+    ));
+    // Extra slides turn the hero into a carousel.
+    $page->add(new admin_setting_heading(
+        'theme_atrium/fp_hero_slides',
+        get_string('fp_hero_slides', 'theme_atrium'),
+        get_string('fp_hero_slides_desc', 'theme_atrium')
+    ));
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/fp_hero_autoplay',
+        get_string('fp_hero_autoplay', 'theme_atrium'),
+        get_string('fp_hero_autoplay_desc', 'theme_atrium'),
+        1
+    ));
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/fp_hero_interval',
+        get_string('fp_hero_interval', 'theme_atrium'),
+        '',
+        '6',
+        ['4' => '4', '6' => '6', '8' => '8', '10' => '10']
+    ));
+    for ($i = 2; $i <= frontpage_settings::MAX_SLIDES; $i++) {
+        $page->add(new admin_setting_configtext(
+            'theme_atrium/fp_hero_slide' . $i . '_heading',
+            get_string('fp_hero_slide_heading', 'theme_atrium', $i),
+            get_string('fp_hero_slide_heading_desc', 'theme_atrium'),
+            '',
+            PARAM_TEXT
+        ));
+        $page->add(new admin_setting_configtextarea(
+            'theme_atrium/fp_hero_slide' . $i . '_subheading',
+            get_string('fp_hero_slide_subheading', 'theme_atrium', $i),
+            '',
+            '',
+            PARAM_TEXT
+        ));
+        $page->add(new admin_setting_configtext(
+            'theme_atrium/fp_hero_slide' . $i . '_buttontext',
+            get_string('fp_hero_slide_buttontext', 'theme_atrium', $i),
+            '',
+            '',
+            PARAM_TEXT
+        ));
+        $page->add(new admin_setting_configtext(
+            'theme_atrium/fp_hero_slide' . $i . '_buttonurl',
+            get_string('fp_hero_slide_buttonurl', 'theme_atrium', $i),
+            '',
+            '',
+            PARAM_URL
+        ));
+        $addcss($page, new admin_setting_configstoredfile(
+            'theme_atrium/fp_hero_slide' . $i . '_image',
+            get_string('fp_hero_slide_image', 'theme_atrium', $i),
+            '',
+            'fp_hero_slide' . $i . '_image',
+            0,
+            ['maxfiles' => 1, 'accepted_types' => ['web_image']]
+        ));
+    }
+
+    // Feature blocks.
+    $page->add(new admin_setting_heading(
+        'theme_atrium/fp_features',
+        get_string('fp_features', 'theme_atrium'),
+        get_string('fp_features_desc', 'theme_atrium')
+    ));
+    $page->add(new admin_setting_configcheckbox('theme_atrium/fp_features_enable', $sectionenable, '', 1));
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/fp_features_heading',
+        $sectionheading,
+        '',
+        get_string('fp_features_heading_default', 'theme_atrium'),
+        PARAM_TEXT
+    ));
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/fp_features_count',
+        get_string('fp_features_count', 'theme_atrium'),
+        '',
+        '3',
+        ['3' => '3', '6' => '6']
+    ));
+    $icons = array_combine(frontpage_settings::ICONS, frontpage_settings::ICONS);
+    for ($i = 1; $i <= frontpage_settings::MAX_FEATURES; $i++) {
+        $page->add(new admin_setting_configselect(
+            "theme_atrium/fp_feature{$i}_icon",
+            get_string('fp_feature_icon', 'theme_atrium', $i),
+            '',
+            frontpage_settings::ICONS[$i - 1],
+            $icons
+        ));
+        $page->add(new admin_setting_configtext(
+            "theme_atrium/fp_feature{$i}_title",
+            get_string('fp_feature_title', 'theme_atrium', $i),
+            '',
+            $i <= 3 ? get_string("fp_feature{$i}_title_default", 'theme_atrium') : '',
+            PARAM_TEXT
+        ));
+        $page->add(new admin_setting_configtextarea(
+            "theme_atrium/fp_feature{$i}_text",
+            get_string('fp_feature_text', 'theme_atrium', $i),
+            '',
+            $i <= 3 ? get_string("fp_feature{$i}_text_default", 'theme_atrium') : '',
+            PARAM_TEXT
+        ));
+        $page->add(new admin_setting_configtext(
+            "theme_atrium/fp_feature{$i}_url",
+            get_string('fp_feature_url', 'theme_atrium', $i),
+            '',
+            '',
+            PARAM_URL
+        ));
+    }
+
+    // Course showcase.
+    $page->add(new admin_setting_heading('theme_atrium/fp_showcase', get_string('fp_showcase', 'theme_atrium'), ''));
+    $page->add(new admin_setting_configcheckbox('theme_atrium/fp_showcase_enable', $sectionenable, '', 1));
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/fp_showcase_heading',
+        $sectionheading,
+        '',
+        get_string('fp_showcase_heading_default', 'theme_atrium'),
+        PARAM_TEXT
+    ));
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/fp_showcase_source',
+        get_string('fp_showcase_source', 'theme_atrium'),
+        get_string('fp_showcase_source_desc', 'theme_atrium'),
+        'latest',
+        ['latest' => get_string('fp_showcase_latest', 'theme_atrium'), 'category' => get_string(
+            'fp_showcase_category',
+            'theme_atrium'
+        ),
+        'ids' => get_string(
+            'fp_showcase_pick',
+            'theme_atrium'
+        )]
+    ));
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/fp_showcase_category',
+        get_string('fp_showcase_category', 'theme_atrium'),
+        '',
+        0,
+        [0 => get_string('none')] + core_course_category::make_categories_list()
+    ));
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/fp_showcase_ids',
+        get_string('fp_showcase_ids', 'theme_atrium'),
+        get_string('fp_showcase_ids_desc', 'theme_atrium'),
+        '',
+        PARAM_TEXT
+    ));
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/fp_showcase_count',
+        get_string('fp_showcase_count', 'theme_atrium'),
+        '',
+        6,
+        array_combine(range(3, 12), range(3, 12))
+    ));
+
+    // Stats strip.
+    $page->add(new admin_setting_heading(
+        'theme_atrium/fp_stats',
+        get_string('fp_stats', 'theme_atrium'),
+        get_string('fp_stats_desc', 'theme_atrium')
+    ));
+    $page->add(new admin_setting_configcheckbox('theme_atrium/fp_stats_enable', $sectionenable, '', 1));
+    $statdefaults = [1 => '{courses}', 2 => '{users}', 3 => '{categories}', 4 => '{completions}'];
+    for ($i = 1; $i <= frontpage_settings::MAX_STATS; $i++) {
+        $page->add(new admin_setting_configtext(
+            "theme_atrium/fp_stat{$i}_label",
+            get_string('fp_stat_label', 'theme_atrium', $i),
+            '',
+            get_string("fp_stat{$i}_label_default", 'theme_atrium'),
+            PARAM_TEXT
+        ));
+        $page->add(new admin_setting_configtext(
+            "theme_atrium/fp_stat{$i}_value",
+            get_string('fp_stat_value', 'theme_atrium', $i),
+            '',
+            $statdefaults[$i],
+            PARAM_TEXT
+        ));
+    }
+
+    // Testimonials.
+    $page->add(new admin_setting_heading('theme_atrium/fp_testimonials', get_string('fp_testimonials', 'theme_atrium'), ''));
+    $page->add(new admin_setting_configcheckbox('theme_atrium/fp_testimonials_enable', $sectionenable, '', 0));
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/fp_testimonials_heading',
+        $sectionheading,
+        '',
+        get_string('fp_testimonials_heading_default', 'theme_atrium'),
+        PARAM_TEXT
+    ));
+    for ($i = 1; $i <= frontpage_settings::MAX_TESTIMONIALS; $i++) {
+        $page->add(new admin_setting_configtextarea(
+            "theme_atrium/fp_testimonial{$i}_quote",
+            get_string('fp_testimonial_quote', 'theme_atrium', $i),
+            '',
+            '',
+            PARAM_TEXT
+        ));
+        $page->add(new admin_setting_configtext(
+            "theme_atrium/fp_testimonial{$i}_name",
+            get_string('fp_testimonial_name', 'theme_atrium', $i),
+            '',
+            '',
+            PARAM_TEXT
+        ));
+        $page->add(new admin_setting_configtext(
+            "theme_atrium/fp_testimonial{$i}_role",
+            get_string('fp_testimonial_role', 'theme_atrium', $i),
+            '',
+            '',
+            PARAM_TEXT
+        ));
+        $page->add(new admin_setting_configstoredfile(
+            "theme_atrium/fp_testimonial{$i}_photo",
+            get_string('fp_testimonial_photo', 'theme_atrium', $i),
+            '',
+            "fp_testimonial{$i}_photo",
+            0,
+            ['maxfiles' => 1, 'accepted_types' => ['web_image']]
+        ));
+    }
+
+    // About band.
+    $page->add(new admin_setting_heading('theme_atrium/fp_about', get_string('fp_about', 'theme_atrium'), ''));
+    $page->add(new admin_setting_configcheckbox('theme_atrium/fp_about_enable', $sectionenable, '', 0));
+    $page->add(new admin_setting_configtext('theme_atrium/fp_about_heading', $sectionheading, '', '', PARAM_TEXT));
+    $page->add(new admin_setting_confightmleditor('theme_atrium/fp_about_text', get_string(
+        'fp_about_text',
+        'theme_atrium'
+    ), '', ''));
+    $page->add(new admin_setting_configstoredfile(
+        'theme_atrium/fp_aboutimage',
+        get_string('fp_about_image', 'theme_atrium'),
+        '',
+        'fp_aboutimage',
+        0,
+        ['maxfiles' => 1, 'accepted_types' => ['web_image']]
+    ));
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/fp_about_imageside',
+        get_string('fp_about_imageside', 'theme_atrium'),
+        '',
+        'right',
+        ['left' => get_string('fp_align_left', 'theme_atrium'), 'right' => get_string('fp_align_right', 'theme_atrium')]
+    ));
+    $page->add(new admin_setting_configtext('theme_atrium/fp_about_buttontext', get_string(
+        'fp_button1text',
+        'theme_atrium'
+    ), '', '', PARAM_TEXT));
+    $page->add(new admin_setting_configtext('theme_atrium/fp_about_buttonurl', get_string(
+        'fp_button1url',
+        'theme_atrium'
+    ), '', '', PARAM_URL));
+
+    // Call to action.
+    $page->add(new admin_setting_heading('theme_atrium/fp_cta', get_string('fp_cta', 'theme_atrium'), ''));
+    $page->add(new admin_setting_configcheckbox('theme_atrium/fp_cta_enable', $sectionenable, '', 1));
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/fp_cta_heading',
+        $sectionheading,
+        get_string('fp_placeholders_desc', 'theme_atrium'),
+        get_string('fp_cta_heading_default', 'theme_atrium'),
+        PARAM_TEXT
+    ));
+    $page->add(new admin_setting_configtextarea(
+        'theme_atrium/fp_cta_text',
+        get_string('fp_cta_text', 'theme_atrium'),
+        '',
+        get_string('fp_cta_text_default', 'theme_atrium'),
+        PARAM_TEXT
+    ));
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/fp_cta_buttontext',
+        get_string('fp_button1text', 'theme_atrium'),
+        '',
+        get_string('fp_cta_buttontext_default', 'theme_atrium'),
+        PARAM_TEXT
+    ));
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/fp_cta_buttonurl',
+        get_string('fp_button1url', 'theme_atrium'),
+        '',
+        '/login/index.php',
+        PARAM_URL
+    ));
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/fp_cta_background',
+        get_string('fp_cta_background', 'theme_atrium'),
+        '',
+        'accent',
+        ['accent' => get_string('fp_cta_bg_accent', 'theme_atrium'), 'dark' => get_string('fp_cta_bg_dark', 'theme_atrium'),
+        'image' => get_string(
+            'fp_cta_bg_image',
+            'theme_atrium'
+        )]
+    ));
+    $page->add(new admin_setting_configstoredfile(
+        'theme_atrium/fp_ctaimage',
+        get_string('fp_cta_image', 'theme_atrium'),
+        '',
+        'fp_ctaimage',
+        0,
+        ['maxfiles' => 1, 'accepted_types' => ['web_image']]
+    ));
+
+    $settings->add($page);
+
+    // Catalogue.
+    $page = new admin_settingpage('theme_atrium_catalogue', get_string('cataloguesettings', 'theme_atrium'));
+    $page->add(new admin_setting_heading('theme_atrium/catalogue_intro', '', get_string('catalogue_intro', 'theme_atrium')));
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/catalogue_perpage',
+        get_string('catalogue_perpage', 'theme_atrium'),
+        get_string('catalogue_perpage_desc', 'theme_atrium'),
+        12,
+        array_combine([6, 9, 12, 18, 24, 36, 48], [6, 9, 12, 18, 24, 36, 48])
+    ));
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/catalogue_defaultsort',
+        get_string('catalogue_defaultsort', 'theme_atrium'),
+        '',
+        'name',
+        [
+            'name' => get_string('catalogue_sort_name', 'theme_atrium'),
+            'newest' => get_string('catalogue_sort_newest', 'theme_atrium'),
+            'popular' => get_string('catalogue_sort_popular', 'theme_atrium'),
+        ]
+    ));
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/catalogue_showenrolled',
+        get_string('catalogue_showenrolled', 'theme_atrium'),
+        get_string('catalogue_showenrolled_desc', 'theme_atrium'),
+        1
+    ));
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/catalogue_showactivities',
+        get_string('catalogue_showactivities', 'theme_atrium'),
+        get_string('catalogue_showactivities_desc', 'theme_atrium'),
+        1
+    ));
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/catalogue_showprogress',
+        get_string('catalogue_showprogress', 'theme_atrium'),
+        get_string('catalogue_showprogress_desc', 'theme_atrium'),
+        1
+    ));
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/catalogue_showprice',
+        get_string('catalogue_showprice', 'theme_atrium'),
+        get_string('catalogue_showprice_desc', 'theme_atrium'),
+        1
+    ));
+    $page->add(new admin_setting_heading(
+        'theme_atrium/enrol_heading',
+        get_string('enrolpagesettings', 'theme_atrium'),
+        get_string('enrolpagesettings_desc', 'theme_atrium')
+    ));
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/enrol_showoutline',
+        get_string('enrol_showoutline', 'theme_atrium'),
+        get_string('enrol_showoutline_desc', 'theme_atrium'),
+        1
+    ));
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/enrol_showinstructors',
+        get_string('enrol_showinstructors', 'theme_atrium'),
+        get_string('enrol_showinstructors_desc', 'theme_atrium'),
+        1
+    ));
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/enrol_showrelated',
+        get_string('enrol_showrelated', 'theme_atrium'),
+        get_string('enrol_showrelated_desc', 'theme_atrium'),
+        1
+    ));
+    $settings->add($page);
+
+    // Site.
+    $page = new admin_settingpage('theme_atrium_site', get_string('sitesettings', 'theme_atrium'));
+    $page->add(new admin_setting_heading(
+        'theme_atrium/announcement_heading',
+        get_string('announcementsettings', 'theme_atrium'),
+        get_string('announcementsettings_desc', 'theme_atrium')
+    ));
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/announcement_enable',
+        get_string('announcement_enable', 'theme_atrium'),
+        '',
+        0
+    ));
+    $page->add(new admin_setting_confightmleditor(
+        'theme_atrium/announcement_text',
+        get_string('announcement_text', 'theme_atrium'),
+        get_string('announcement_text_desc', 'theme_atrium'),
+        ''
+    ));
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/announcement_type',
+        get_string('announcement_type', 'theme_atrium'),
+        '',
+        'info',
+        [
+            'info' => get_string('announcement_type_info', 'theme_atrium'),
+            'success' => get_string('announcement_type_success', 'theme_atrium'),
+            'warning' => get_string('announcement_type_warning', 'theme_atrium'),
+            'danger' => get_string('announcement_type_danger', 'theme_atrium'),
+        ]
+    ));
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/announcement_dismissible',
+        get_string('announcement_dismissible', 'theme_atrium'),
+        get_string('announcement_dismissible_desc', 'theme_atrium'),
+        1
+    ));
+    $page->add(new admin_setting_heading(
+        'theme_atrium/quicklinks_heading',
+        get_string('quicklinks', 'theme_atrium'),
+        get_string('quicklinks_desc', 'theme_atrium')
+    ));
+    $page->add(new admin_setting_configtextarea(
+        'theme_atrium/quicklinks',
+        get_string('quicklinks_items', 'theme_atrium'),
+        get_string('quicklinks_items_desc', 'theme_atrium'),
+        '',
+        PARAM_RAW
+    ));
+
+    $settings->add($page);
+
+    // Footer.
+    $page = new admin_settingpage('theme_atrium_footer', get_string('footersettings', 'theme_atrium'));
+
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/footercolumns',
+        get_string('footercolumns', 'theme_atrium'),
+        get_string('footercolumns_desc', 'theme_atrium'),
+        '0',
+        ['0' => '0', '1' => '1', '2' => '2', '3' => '3', '4' => '4']
+    ));
+
+    $columntypes = [
+        'html' => get_string('footercoltype:html', 'theme_atrium'),
+        'menu' => get_string('footercoltype:menu', 'theme_atrium'),
+        'social' => get_string('footercoltype:social', 'theme_atrium'),
+        'contact' => get_string('footercoltype:contact', 'theme_atrium'),
+    ];
+    for ($i = 1; $i <= \theme_atrium\output\footer::MAX_COLUMNS; $i++) {
+        $page->add(new admin_setting_heading(
+            'theme_atrium/footercol' . $i . 'heading',
+            get_string('footercolheading', 'theme_atrium', $i),
+            ''
+        ));
+        $page->add(new admin_setting_configselect(
+            'theme_atrium/footercol' . $i . 'type',
+            get_string('footercoltype', 'theme_atrium'),
+            '',
+            'html',
+            $columntypes
+        ));
+        $page->add(new admin_setting_configtext(
+            'theme_atrium/footercol' . $i . 'title',
+            get_string('footercoltitle', 'theme_atrium'),
+            '',
+            '',
+            PARAM_TEXT
+        ));
+        $page->add(new admin_setting_confightmleditor(
+            'theme_atrium/footercol' . $i . 'html',
+            get_string('footercolhtml', 'theme_atrium'),
+            get_string('footercolhtml_desc', 'theme_atrium'),
+            ''
+        ));
+        $page->add(new admin_setting_configtextarea(
+            'theme_atrium/footercol' . $i . 'menu',
+            get_string('footercolmenu', 'theme_atrium'),
+            get_string('footercolmenu_desc', 'theme_atrium'),
+            '',
+            PARAM_RAW
+        ));
+    }
+
+    $page->add(new admin_setting_heading(
+        'theme_atrium/footershared_heading',
+        get_string('footershared', 'theme_atrium'),
+        get_string('footershared_desc', 'theme_atrium')
+    ));
+
+    $page->add(new admin_setting_configtextarea(
+        'theme_atrium/sociallinks',
+        get_string('sociallinks', 'theme_atrium'),
+        get_string('sociallinks_desc', 'theme_atrium'),
+        '',
+        PARAM_RAW
+    ));
+
+    $page->add(new admin_setting_configtextarea(
+        'theme_atrium/footercontactaddress',
+        get_string('footercontactaddress', 'theme_atrium'),
+        '',
+        '',
+        PARAM_TEXT,
+        '40',
+        '3'
+    ));
+
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/footercontactphone',
+        get_string('footercontactphone', 'theme_atrium'),
+        '',
+        '',
+        PARAM_TEXT
+    ));
+
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/footercontactemail',
+        get_string('footercontactemail', 'theme_atrium'),
+        '',
+        '',
+        PARAM_EMAIL
+    ));
+
+    $page->add(new admin_setting_heading(
+        'theme_atrium/footerbottom_heading',
+        get_string('footerbottom', 'theme_atrium'),
+        get_string('footerbottom_desc', 'theme_atrium')
+    ));
+
+    $page->add(new admin_setting_configstoredfile(
+        'theme_atrium/footerlogo',
+        get_string('footerlogo', 'theme_atrium'),
+        get_string('footerlogo_desc', 'theme_atrium'),
+        'footerlogo',
+        0,
+        ['maxfiles' => 1, 'accepted_types' => ['web_image']]
+    ));
+
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/footerlegal',
+        get_string('footerlegal', 'theme_atrium'),
+        get_string('footerlegal_desc', 'theme_atrium'),
+        get_string('footerlegal_default', 'theme_atrium'),
+        PARAM_TEXT
+    ));
+
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/footerprivacyurl',
+        get_string('footerprivacyurl', 'theme_atrium'),
+        get_string('footerprivacyurl_desc', 'theme_atrium'),
+        '',
+        PARAM_URL
+    ));
+
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/footertermsurl',
+        get_string('footertermsurl', 'theme_atrium'),
+        get_string('footertermsurl_desc', 'theme_atrium'),
+        '',
+        PARAM_URL
+    ));
+
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/showpoweredby',
+        get_string('showpoweredby', 'theme_atrium'),
+        get_string('showpoweredby_desc', 'theme_atrium'),
+        1
+    ));
+
+    $settings->add($page);
+
+    // Accessibility statement.
+    $page = new admin_settingpage('theme_atrium_a11ystatement', get_string('a11ystatementsettings', 'theme_atrium'));
+    $page->add(new admin_setting_heading(
+        'theme_atrium/a11ystatement_intro',
+        '',
+        get_string('a11ystatement_intro', 'theme_atrium')
+    ));
+
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/a11ystatement_enable',
+        get_string('a11ystatement_enable', 'theme_atrium'),
+        get_string('a11ystatement_enable_desc', 'theme_atrium'),
+        0
+    ));
+
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/a11ystatement_org',
+        get_string('a11ystatement_org', 'theme_atrium'),
+        get_string('a11ystatement_org_desc', 'theme_atrium'),
+        '',
+        PARAM_TEXT
+    ));
+
+    $page->add(new admin_setting_configselect(
+        'theme_atrium/a11ystatement_conformance',
+        get_string('a11ystatement_conformance', 'theme_atrium'),
+        get_string('a11ystatement_conformance_desc', 'theme_atrium'),
+        accessibility_statement::PARTIAL,
+        [
+            accessibility_statement::FULL =>
+                get_string('a11ystatement_claim_full', 'theme_atrium'),
+            accessibility_statement::PARTIAL =>
+                get_string('a11ystatement_claim_partial', 'theme_atrium'),
+            accessibility_statement::NONE =>
+                get_string('a11ystatement_claim_none', 'theme_atrium'),
+        ]
+    ));
+
+    $page->add(new admin_setting_confightmleditor(
+        'theme_atrium/a11ystatement_known',
+        get_string('a11ystatement_known', 'theme_atrium'),
+        get_string('a11ystatement_known_desc', 'theme_atrium'),
+        ''
+    ));
+
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/a11ystatement_contact',
+        get_string('a11ystatement_contact', 'theme_atrium'),
+        get_string('a11ystatement_contact_desc', 'theme_atrium'),
+        '',
+        PARAM_TEXT
+    ));
+
+    $page->add(new admin_setting_confightmleditor(
+        'theme_atrium/a11ystatement_enforcement',
+        get_string('a11ystatement_enforcement', 'theme_atrium'),
+        get_string('a11ystatement_enforcement_desc', 'theme_atrium'),
+        ''
+    ));
+
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/a11ystatement_reviewed',
+        get_string('a11ystatement_reviewed', 'theme_atrium'),
+        get_string('a11ystatement_reviewed_desc', 'theme_atrium'),
+        '',
+        PARAM_TEXT
+    ));
+
+    $page->add(new admin_setting_confightmleditor(
+        'theme_atrium/a11ystatement_extra',
+        get_string('a11ystatement_extra', 'theme_atrium'),
+        get_string('a11ystatement_extra_desc', 'theme_atrium'),
+        ''
+    ));
+
+    $settings->add($page);
+
+    // Advanced.
+    $page = new admin_settingpage('theme_atrium_advanced', get_string('advancedsettings', 'theme_atrium'));
+
+    $addcss($page, new admin_setting_scsscode(
+        'theme_atrium/scsspre',
+        get_string('rawscsspre', 'theme_atrium'),
+        get_string('rawscsspre_desc', 'theme_atrium'),
+        '',
+        PARAM_RAW
+    ));
+
+    $addcss($page, new admin_setting_scsscode(
+        'theme_atrium/scss',
+        get_string('rawscss', 'theme_atrium'),
+        get_string('rawscss_desc', 'theme_atrium'),
+        '',
+        PARAM_RAW
+    ));
+
+
+    $addcss($page, new admin_setting_configtextarea(
+        'theme_atrium/customcss',
+        get_string('customcss', 'theme_atrium'),
+        get_string('customcss_desc', 'theme_atrium'),
+        '',
+        PARAM_RAW
+    ));
+
+    $page->add(new admin_setting_configcheckbox(
+        'theme_atrium/prefetch',
+        get_string('prefetch', 'theme_atrium'),
+        get_string('prefetch_desc', 'theme_atrium'),
+        1
+    ));
+
+    $addcss($page, new admin_setting_configcheckbox(
+        'theme_atrium/print_linkurls',
+        get_string('print_linkurls', 'theme_atrium'),
+        get_string('print_linkurls_desc', 'theme_atrium'),
+        0
+    ));
+
+    $page->add(new admin_setting_configtext(
+        'theme_atrium/ga4id',
+        get_string('ga4id', 'theme_atrium'),
+        get_string('ga4id_desc', 'theme_atrium'),
+        '',
+        '/^(G-[A-Za-z0-9]{4,20})?$/'
+    ));
+
+    $settings->add($page);
+}
+
+// The quick start page, beside the theme in the admin tree.
+$ADMIN->add('themes', new admin_externalpage(
+    'theme_atrium_quickstart',
+    get_string('quickstart_pagetitle', 'theme_atrium'),
+    new moodle_url('/theme/atrium/quickstart.php'),
+    'moodle/site:config'
+));
